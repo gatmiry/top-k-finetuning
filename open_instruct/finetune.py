@@ -16,6 +16,8 @@
 # isort: off
 import os
 
+from my_topk_attention import topk_scaled_dot_product_attention
+
 # We need to set NCCL_CUMEM_ENABLE=0 for performance reasons; see:
 # https://github.com/vllm-project/vllm/issues/5723#issuecomment-2554389656
 os.environ["NCCL_CUMEM_ENABLE"] = "0"  # NOQA
@@ -474,6 +476,8 @@ def main(args: FlatArguments, tc: TokenizerConfig):
 
     accelerator.wait_for_everyone()
 
+    
+    print('im in finetune.py!!!')
     if args.dataset_mixer is not None:
         args.dataset_mixer_list = [item for pair in args.dataset_mixer.items() for item in pair]
     with accelerator.main_process_first():
@@ -496,6 +500,8 @@ def main(args: FlatArguments, tc: TokenizerConfig):
     if accelerator.is_main_process:
         visualize_token(train_dataset[0][INPUT_IDS_KEY], tokenizer)
 
+
+    print('im here!!')
     if args.cache_dataset_only:
         return
 
@@ -518,6 +524,9 @@ def main(args: FlatArguments, tc: TokenizerConfig):
         raise ValueError(
             "You are instantiating a new config instance from scratch. This is not supported by this script."
         )
+
+    print(f'hiii config is {config._attn_implementation}')
+    torch.nn.functional.scaled_dot_product_attention = topk_scaled_dot_product_attention
 
     if args.model_name_or_path:
         if args.use_qlora:
@@ -769,6 +778,9 @@ def main(args: FlatArguments, tc: TokenizerConfig):
             local_total_tokens_this_log_period += tokens_in_batch
             local_pred_tokens += pred_tokens_in_batch
             local_pred_tokens_this_log_period += pred_tokens_in_batch
+
+
+            print('im here!!')
 
             with accelerator.accumulate(model):
                 if args.load_balancing_loss:
